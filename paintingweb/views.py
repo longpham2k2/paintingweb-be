@@ -43,7 +43,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = get_user_model().objects.all().order_by('-date_joined')
     serializer_class = serializers.UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class GroupViewSet(viewsets.ModelViewSet):
@@ -52,7 +52,7 @@ class GroupViewSet(viewsets.ModelViewSet):
     """
     queryset = Group.objects.all()
     serializer_class = serializers.GroupSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class ArtistViewSet(viewsets.ModelViewSet):
@@ -61,7 +61,7 @@ class ArtistViewSet(viewsets.ModelViewSet):
     """
     queryset = models.Artist.objects.all()
     serializer_class = serializers.ArtistSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -70,7 +70,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     """
     queryset = models.Category.objects.all()
     serializer_class = serializers.CategorySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class ArtworkViewSet(viewsets.ModelViewSet):
@@ -88,7 +88,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
     """
     queryset = models.Favorite.objects.all()
     serializer_class = serializers.FavoriteSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class BookmarkViewSet(viewsets.ModelViewSet):
@@ -97,4 +97,4 @@ class BookmarkViewSet(viewsets.ModelViewSet):
     """
     queryset = models.Bookmark.objects.all()
     serializer_class = serializers.BookmarkSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]

@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 
+
 class User(AbstractUser):
     # Delete not use field
     first_name = None
@@ -20,7 +21,8 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return self.email   
+        return self.email
+
 
 class Artist(models.Model):
     fullname = models.CharField(
@@ -46,6 +48,9 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+    def background(self):
+        return Artwork.objects.filter(category_id=self.id).first()
 
 
 class Favorite(models.Model):
@@ -90,11 +95,9 @@ class Artwork(models.Model):
 
     def __str__(self):
         return self.name
-        
+
     def favored_by(self):
         return Favorite.objects.filter(artwork_id=self.id)
 
     def bookmarked_by(self):
         return Bookmark.objects.filter(artwork_id=self.id)
-
-

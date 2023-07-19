@@ -80,9 +80,13 @@ class ArtistSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class CategorySerializer(serializers.HyperlinkedModelSerializer):
+    background = serializers.SerializerMethodField('featured_artwork', read_only=True)
+
+    def featured_artwork(self, categoryItem):
+        return ArtworkSerializer(categoryItem.background()).data
     class Meta:
         model = models.Category
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'background']
 
 
 class ArtworkSerializer(serializers.ModelSerializer):
