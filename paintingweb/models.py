@@ -1,3 +1,4 @@
+from unicodedata import category
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -51,6 +52,9 @@ class Category(models.Model):
 
     def background(self):
         return Artwork.objects.filter(category_id=self.id).first()
+
+    def number_of_artworks(self):
+        return Artwork.objects.filter(category_id=self.id).count()
 
 
 class Favorite(models.Model):

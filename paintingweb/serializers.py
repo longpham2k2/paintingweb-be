@@ -81,12 +81,15 @@ class ArtistSerializer(serializers.HyperlinkedModelSerializer):
 
 class CategorySerializer(serializers.HyperlinkedModelSerializer):
     background = serializers.SerializerMethodField('featured_artwork', read_only=True)
+    number_of_artworks = serializers.SerializerMethodField('count_artwork', read_only=True)
 
     def featured_artwork(self, categoryItem):
-        return ArtworkSerializer(categoryItem.background()).data
+        return categoryItem.background().link or None
+    def count_artwork(self, categoryItem):
+        return categoryItem.number_of_artworks()
     class Meta:
         model = models.Category
-        fields = ['id', 'name', 'background']
+        fields = ['id', 'name', 'background', 'number_of_artworks']
 
 
 class ArtworkSerializer(serializers.ModelSerializer):
