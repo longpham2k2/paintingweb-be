@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.validators import UniqueValidator
+from email.headerregistry import Address
 from django.contrib.auth.password_validation import validate_password
 from . import models
 
@@ -23,10 +24,16 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField(
+        'connectedProfile', read_only=True)
+
+    def connectedProfile(self, userItem):
+        return ArtistSerializer(userItem.profile()).data
+
     class Meta:
         model = get_user_model()
-        fields = ['id', 'email', 'groups']
+        fields = ['id', 'email', 'groups', 'profile']
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -47,18 +54,22 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ('email', 'password', 'name')
 
     def create(self, validated_data):
+        userEmail = validated_data['email']
+        userId = Address(addr_spec=userEmail).username
+        userName = ""
+        try:
+            userName = validated_data['name']
+        except KeyError as ke:
+            pass
+
         user = models.User.objects.create(
-            email=validated_data['email'],
+            id=userId,
+            email=userEmail,
         )
         user.set_password(validated_data['password'])
         user.save()
-        name = ""
-        try:
-            name = validated_data['name']
-        except KeyError as ke:
-            pass
         artist = models.Artist.objects.create(
-            fullname=name,
+            fullname=userName,
             user=user
         )
         artist.save()
@@ -66,37 +77,44 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class GroupSerializer(serializers.HyperlinkedModelSerializer):
+class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['id', 'name']
 
 
-class ArtistSerializer(serializers.HyperlinkedModelSerializer):
+class ArtistSerializer(serializers.ModelSerializer):
+    artworks = serializers.SerializerMethodField('artworkList', read_only=True)
+
+    def artworkList(self, artistItem):
+        return ArtworkSerializer(artistItem.artworks(), many=True).data
+
     class Meta:
         model = models.Artist
-        fields = ['id', 'fullname', 'bio',
-                  'gender', 'age', 'dateofbirth', 'user']
+        fields = ['id', 'fullname', 'bio', 'gender',
+                  'age', 'dateofbirth', 'artworks', 'user']
 
 
-class CategorySerializer(serializers.HyperlinkedModelSerializer):
-    background = serializers.SerializerMethodField('featured_artwork', read_only=True)
-    number_of_artworks = serializers.SerializerMethodField('count_artwork', read_only=True)
+class CategorySerializer(serializers.ModelSerializer):
+    background = serializers.SerializerMethodField(
+        'featured_artwork', read_only=True)
+    number_of_artworks = serializers.SerializerMethodField(
+        'count_artwork', read_only=True)
 
     def featured_artwork(self, categoryItem):
-        return categoryItem.background().link or None
+        return categoryItem.background().link if categoryItem.background() else None
+
     def count_artwork(self, categoryItem):
         return categoryItem.number_of_artworks()
+
     class Meta:
         model = models.Category
         fields = ['id', 'name', 'background', 'number_of_artworks']
 
 
 class ArtworkSerializer(serializers.ModelSerializer):
-    category = serializers.CharField(
-        source='category.name', allow_blank=True, allow_null=True)
-    author = serializers.CharField(
-        source='author.user.email', allow_blank=True, allow_null=True)
+    category_name = serializers.SerializerMethodField('get_category')
+    author_email = serializers.SerializerMethodField('get_author')
     favored_by = serializers.SerializerMethodField('favorite_by')
     bookmarked_by = serializers.SerializerMethodField('bookmark_by')
 
@@ -106,9 +124,26 @@ class ArtworkSerializer(serializers.ModelSerializer):
     def bookmark_by(self, artworkItem):
         return BookmarkSerializer(artworkItem.bookmarked_by(), many=True).data
 
+    def get_category(self, artworkItem):
+        kate = None
+        try:
+            kate = models.Category.objects.get(id=artworkItem.category_id)
+        except models.Category.DoesNotExist:
+            pass
+        return kate.name if kate else None
+
+    def get_author(self, artworkItem):
+        artist = None
+        try:
+            artist = models.Artist.objects.get(id=artworkItem.author_id)
+        except models.Artist.DoesNotExist:
+            pass
+        user = artist.user if artist else None
+        return user.email if user else None
+
     class Meta:
         model = models.Artwork
-        fields = ['id', 'name', 'description', 'link', 'category', 'author',
+        fields = ['id', 'name', 'description', 'link', 'category', 'category_name', 'author', 'author_email',
                   'featured', 'favored_by', 'bookmarked_by', 'created_at', 'updated_at']
 
 

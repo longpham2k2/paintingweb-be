@@ -16,13 +16,16 @@ class User(AbstractUser):
     is_superuser = None
 
     # username = models.CharField(max_length=100, unique=True)
-    email = models.EmailField(max_length=100, unique=True, null=True)
+    id = models.CharField(max_length=100, primary_key=True, unique=True)
+    email = models.EmailField(max_length=100, unique=True)
     password = models.CharField(max_length=100)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
     def __str__(self):
         return self.email
+    def profile(self):
+        return Artist.objects.filter(user_id=self.id).first() or None
 
 
 class Artist(models.Model):
@@ -42,6 +45,8 @@ class Artist(models.Model):
 
     def __str__(self):
         return self.fullname
+    def artworks(self):
+        return Artwork.objects.filter(author_id=self.id)
 
 
 class Category(models.Model):

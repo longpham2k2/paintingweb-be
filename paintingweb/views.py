@@ -81,6 +81,19 @@ class ArtworkViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ArtworkSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        art_name = self.request.query_params.get('name') or None
+        if art_name:
+            queryset = queryset.filter(name__contains=art_name)
+        art_author_id = self.request.query_params.get('author_id') or None
+        if art_author_id:
+            queryset = queryset.filter(author__id__contains=art_author_id)
+        art_author_name = self.request.query_params.get('author_name') or None
+        if art_author_name:
+            queryset = queryset.filter(author__fullname__contains=art_author_name)
+        return queryset
+
 
 class FavoriteViewSet(viewsets.ModelViewSet):
     """
